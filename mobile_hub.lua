@@ -4,32 +4,52 @@ local Tab = Window:NewTab("Player")
 local Section = Tab:NewSection("Hack")
 
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
 local gui = player:WaitForChild("PlayerGui")
 
--- ตั้งค่าความเร็ว
+-- ✅ ตั้งค่าความเร็ว
 Section:NewTextBox("ตั้งค่าความเร็ว", "พิมพ์ความเร็วที่ต้องการ", function(txt)
 	local speed = tonumber(txt)
 	if speed then
-		character:WaitForChild("Humanoid").WalkSpeed = speed
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.WalkSpeed = speed
 	else
 		warn("⚠️ พิมพ์ตัวเลขเท่านั้น เช่น 50, 100")
 	end
 end)
 
--- ตั้งค่ากระโดด
+-- ✅ ตั้งค่าการกระโดด (เวอร์ชันแก้แล้ว)
 Section:NewTextBox("ตั้งค่าการกระโดด", "พิมพ์ JumpPower เช่น 150", function(txt)
 	local jump = tonumber(txt)
 	if jump then
-		local humanoid = character:WaitForChild("Humanoid")
-		humanoid.UseJumpPower = true
-		humanoid.JumpPower = jump
+		local function applyJumpPower()
+			local character = player.Character or player.CharacterAdded:Wait()
+			local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+			if humanoid then
+				humanoid.UseJumpPower = true
+				humanoid.JumpPower = jump
+				humanoid.JumpHeight = jump / 3
+			end
+		end
+
+		-- ตั้งค่าทันที
+		applyJumpPower()
+
+		-- ตั้งซ้ำทุก 0.5 วิ กันรีเซ็ต
+		task.spawn(function()
+			while true do
+				applyJumpPower()
+				wait(0.5)
+			end
+		end)
+
+		print("✅ ตั้งค่า JumpPower เป็น: " .. jump)
 	else
 		warn("⚠️ กรุณาพิมพ์ตัวเลข เช่น 100, 150")
 	end
 end)
 
--- คำสั่งผ่านแชท: speed 100
+-- ✅ ระบบพิมพ์ในแชท speed 100
 local function setSpeedPopup()
 	game.StarterGui:SetCore("SendNotification", {
 		Title = "ตั้งค่าความเร็ว",
@@ -42,7 +62,9 @@ local function setSpeedPopup()
 		local speedStr = msg:match("^speed%s+(%d+)")
 		if speedStr then
 			local speed = tonumber(speedStr)
-			character:WaitForChild("Humanoid").WalkSpeed = speed
+			local character = player.Character or player.CharacterAdded:Wait()
+			local humanoid = character:WaitForChild("Humanoid")
+			humanoid.WalkSpeed = speed
 			game.StarterGui:SetCore("SendNotification", {
 				Title = "✅ ตั้งค่าแล้ว",
 				Text = "เดินเร็ว: " .. speed,
@@ -52,7 +74,7 @@ local function setSpeedPopup()
 	end)
 end
 
--- ปุ่มมือถือมุมขวาล่าง
+-- ✅ ปุ่มมือถือมุมล่างขวา
 local UserInputService = game:GetService("UserInputService")
 
 if UserInputService.TouchEnabled then
@@ -72,7 +94,7 @@ if UserInputService.TouchEnabled then
 	local corner = Instance.new("UICorner", button)
 	corner.CornerRadius = UDim.new(1, 0)
 
-	-- ลากปุ่มได้
+	-- ลากได้
 	local dragging, dragInput, dragStart, startPos
 
 	local function update(input)
@@ -104,6 +126,7 @@ if UserInputService.TouchEnabled then
 		if input == dragInput and dragging then update(input) end
 	end)
 
+	-- คลิกเปิดเมนู + popup
 	button.MouseButton1Click:Connect(function()
 		Library:ToggleUI()
 		setSpeedPopup()
