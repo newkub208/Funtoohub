@@ -40,6 +40,21 @@ local function setSpeedPopup()
 	end)
 end
 
+Section:NewTextBox("ตั้งค่าการกระโดด", "พิมพ์ JumpPower เช่น 150", function(txt)
+	local jump = tonumber(txt)
+	if jump then
+		local player = game.Players.LocalPlayer
+		local character = player.Character or player.CharacterAdded:Wait()
+		local humanoid = character:WaitForChild("Humanoid")
+		humanoid.UseJumpPower = true
+		humanoid.JumpPower = jump
+		print("ตั้งค่า JumpPower เป็น: " .. jump)
+	else
+		warn("⚠️ กรุณาพิมพ์ตัวเลข เช่น 100, 150")
+	end
+end)
+
+
 local UserInputService = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
 local gui = player:WaitForChild("PlayerGui")
